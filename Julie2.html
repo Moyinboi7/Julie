@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You 💗</title>
+<!-- EmailJS lets this page send you an email straight from her browser,
+     no backend/server needed. Setup instructions are in the <script>
+     block near the bottom, right above where it's used. -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  /* ============================================================
+     COLORS — change these two values to re-theme the whole site
+     ============================================================ */
+  :root {
+    --bg: #0a0a0a;
+    --pink: #ff5fa2;
+    --pink-soft: #ff9dc4;
+    --pink-dim: #7a2c4d;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--pink);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* floating background hearts */
+  #hearts {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .heart {
+    position: absolute;
+    bottom: -10%;
+    color: var(--pink-dim);
+    opacity: 0.6;
+    animation: floatUp linear infinite;
+    user-select: none;
+  }
+  @keyframes floatUp {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.6; }
+    100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+  }
+
+  .stage {
+    position: relative;
+    z-index: 1;
+    max-width: 640px;
+    width: 90%;
+    text-align: center;
+    padding: 40px 30px;
+    display: none;
+    animation: fadeIn 0.6s ease forwards;
+  }
+  .stage.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .stage p {
+    font-size: clamp(1.2rem, 4vw, 1.9rem);
+    line-height: 1.5;
+    margin: 0 0 36px 0;
+    text-shadow: 0 0 18px rgba(255, 95, 162, 0.35);
+  }
+
+  .stage p.small {
+    font-size: clamp(1rem, 3vw, 1.3rem);
+    color: var(--pink-soft);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  button {
+    background: transparent;
+    border: 2px solid var(--pink);
+    color: var(--pink);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 28px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    letter-spacing: 0.3px;
+  }
+
+  button:hover {
+    background: var(--pink);
+    color: var(--bg);
+    box-shadow: 0 0 22px rgba(255, 95, 162, 0.6);
+    transform: translateY(-2px);
+  }
+
+  button.secondary {
+    border-color: var(--pink-dim);
+    color: var(--pink-soft);
+  }
+  button.secondary:hover {
+    background: var(--pink-soft);
+    color: var(--bg);
+  }
+
+  .heart-emoji {
+    font-size: 2.2rem;
+    display: block;
+    margin-bottom: 18px;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.15); }
+  }
+</style>
+</head>
+<body>
+
+<div id="hearts"></div>
+
+<!-- ============================================================
+     STAGE ORDER (do not need to edit this HTML — see the TEXT
+     section at the top of the <script> below to change wording)
+     ============================================================ -->
+
+<div class="stage" data-stage="intro">
+  <span class="heart-emoji">💗</span>
+  <p id="text-intro"></p>
+  <div class="btn-row">
+    <button onclick="goTo('note1')">more</button>
+  </div>
+</div>
+
+<div class="stage" data-stage="note1">
+  <p id="text-note1"></p>
+  <div class="btn-row">
+    <button class="secondary" onclick="goTo('intro')">back</button>
+    <button onclick="goTo('note2')">more</button>
+  </div>
+</div>
+
+<div class="stage" data-stage="note2">
+  <p id="text-note2"></p>
+  <div class="btn-row">
+    <button class="secondary" onclick="goTo('note1')">back</button>
+    <button onclick="goTo('note3')">more</button>
+  </div>
+</div>
+
+<!-- from note3 onward: no more "back" buttons -->
+<div class="stage" data-stage="note3">
+  <p id="text-note3"></p>
+  <div class="btn-row">
+    <button onclick="goTo('so')">So.....</button>
+  </div>
+</div>
+
+<div class="stage" data-stage="so">
+  <p id="text-so"></p>
+  <div class="btn-row">
+    <button onclick="goTo('ask')">.....</button>
+  </div>
+</div>
+
+<div class="stage" data-stage="ask">
+  <p id="text-ask"></p>
+  <div class="btn-row">
+    <button onclick="goTo('question')">Hmmm....</button>
+  </div>
+</div>
+
+<div class="stage" data-stage="question">
+  <p id="text-question"></p>
+  <div class="btn-row">
+    <button class="secondary" onclick="notify('She clicked \'Hmmm....i donno\''); goTo('doubt')" id="btn-no-sure">Hmmm....i donno</button>
+    <button onclick="notify('SHE SAID YES! 🎉'); goTo('yes-final')" id="btn-yes">Yes....I'll be your girlfriend</button>
+  </div>
+</div>
+
+<div class="stage" data-stage="doubt">
+  <p id="text-doubt1"></p>
+  <p id="text-doubt2" class="small"></p>
+  <div class="btn-row">
+    <button class="secondary" onclick="notify('She said NO, for real this time 💔'); goTo('rejected')">NO</button>
+    <button onclick="notify('SHE SAID YES (after teasing you a bit) 🎉'); goTo('yes-final')">YES babyy....I was joking</button>
+  </div>
+</div>
+
+<div class="stage" data-stage="rejected">
+  <p id="text-rejected"></p>
+</div>
+
+<div class="stage" data-stage="yes-final">
+  <span class="heart-emoji">💗💍💗</span>
+  <p id="text-yes-final"></p>
+</div>
+
+<script>
+/* ============================================================
+   EDIT YOUR TEXT HERE
+   Everything you want to say lives in this one object.
+   Change the strings on the right of each colon — leave the
+   quotes in place. Use \n\n inside a string for a paragraph
+   break if you want longer messages to wrap onto new lines.
+   ============================================================ */
+const TEXT = {
+  intro:      "Hey, Baby boo....been working on this for a while now",
+
+  // --- edit these three freely, they're just your message to her ---
+  note1:      "First off, I wanna apologise again for what happened back then in school....I'm sorry I made you cry",
+  note2:      "Also I want you to know that even though I haven't officially asked you out, I consider you my girlfriend and I think you consider me your boyfriend 🥲",
+  note3:      "I want you to know that I Love you so much, CHIDERA!",
+
+  so:         "So.....",
+  ask:        "I wanted to ask.......",
+  question:   "Will you be mine, IBEAWUCHI JULIE CHIDERA?",
+
+  doubt1:     "Chaiii.........Are you actually serious?",
+  doubt2:     "Let me ask again for the last time",
+
+  rejected:   "DAMN....Thanks for being honest",
+
+  yesFinal:   "YESSSSSS You're now my girlfriend officially!! MUAHHH"
+};
+
+/* ============================================================
+   Wiring — you shouldn't need to touch anything below this line
+   ============================================================ */
+document.getElementById('text-intro').textContent    = TEXT.intro;
+document.getElementById('text-note1').textContent    = TEXT.note1;
+document.getElementById('text-note2').textContent    = TEXT.note2;
+document.getElementById('text-note3').textContent    = TEXT.note3;
+document.getElementById('text-so').textContent       = TEXT.so;
+document.getElementById('text-ask').textContent      = TEXT.ask;
+document.getElementById('text-question').textContent = TEXT.question;
+document.getElementById('text-doubt1').textContent   = TEXT.doubt1;
+document.getElementById('text-doubt2').textContent   = TEXT.doubt2;
+document.getElementById('text-rejected').textContent = TEXT.rejected;
+document.getElementById('text-yes-final').textContent= TEXT.yesFinal;
+
+function goTo(stageName) {
+  document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+  const next = document.querySelector('.stage[data-stage="' + stageName + '"]');
+  next.classList.add('active');
+
+  if (stageName === 'rejected') {
+    // try to auto-close the tab/window after a short pause.
+    // Note: browsers only allow scripts to close windows/tabs that
+    // were opened by a script — many browsers will block this and
+    // just leave the page open instead, that's normal.
+    setTimeout(() => { window.close(); }, 2500);
+  }
+}
+
+/* ============================================================
+   EMAIL NOTIFICATIONS — get an email when she clicks something
+   ============================================================
+
+   This uses EmailJS (emailjs.com), a free service that can send
+   email directly from a browser with no backend server. Setup:
+
+   1. Go to https://www.emailjs.com and sign up (free tier is
+      plenty for this).
+   2. Add an Email Service (e.g. connect your Gmail) —
+      you'll get a SERVICE ID.
+   3. Create an Email Template with a subject/body using these
+      variables: {{event}} and {{time}}
+      e.g. subject: "She clicked something 👀"
+           body: "{{event}}\n\nTime: {{time}}"
+      Save it — you'll get a TEMPLATE ID.
+   4. Go to Account > General to find your PUBLIC KEY.
+   5. Paste all three values into EMAILJS_CONFIG below.
+   6. That's it — no other files or servers needed, this all
+      runs from inside the page itself.
+
+   If you leave EMAILJS_CONFIG.enabled as false, no emails will
+   be sent and the site behaves exactly as before.
+   ============================================================ */
+const EMAILJS_CONFIG = {
+  enabled: true,              // set to true once you've filled in the values below
+  publicKey:  "DP_W_gMgE2TFKYrJZ",
+  serviceId:  "service_hg44brh",
+  templateId: "template_179en9t"
+};
+
+if (EMAILJS_CONFIG.enabled) {
+  emailjs.init(EMAILJS_CONFIG.publicKey);
+}
+
+function notify(eventText) {
+  if (!EMAILJS_CONFIG.enabled) return;
+  emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
+    event: eventText,
+    time: new Date().toLocaleString()
+  }).catch(err => console.log("Email notify failed:", err));
+}
+
+// start on the first stage
+goTo('intro');
+
+// floating background hearts
+const heartsContainer = document.getElementById('hearts');
+const heartSymbols = ['💗', '💕', '♥', '💖'];
+for (let i = 0; i < 18; i++) {
+  const h = document.createElement('span');
+  h.className = 'heart';
+  h.textContent = heartSymbols[Math.floor(Math.random() * heartSymbols.length)];
+  h.style.left = Math.random() * 100 + '%';
+  h.style.fontSize = (14 + Math.random() * 22) + 'px';
+  h.style.animationDuration = (8 + Math.random() * 10) + 's';
+  h.style.animationDelay = (Math.random() * 10) + 's';
+  heartsContainer.appendChild(h);
+}
+</script>
+
+</body>
+</html>
